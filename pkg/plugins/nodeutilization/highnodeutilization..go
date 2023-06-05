@@ -25,15 +25,16 @@ import (
 	"sigs.k8s.io/descheduler/cmd/descheduler/app"
 	"sigs.k8s.io/descheduler/pkg/descheduler"
 	podutil "sigs.k8s.io/descheduler/pkg/descheduler/pod"
-	"sigs.k8s.io/descheduler/pkg/framework"
-	"sigs.k8s.io/descheduler/pkg/framework/plugins/pluginbuilder"
+	"sigs.k8s.io/descheduler/pkg/framework/pluginregistry"
+	"sigs.k8s.io/descheduler/pkg/framework/plugins/defaultevictor"
+	"sigs.k8s.io/descheduler/pkg/framework/types"
 )
 
 func init() {
 	app.SetupLogs()
 	descheduler.SetupPlugins()
 	fmt.Println("123")
-	pluginbuilder.Register(HighNodeUtilizationPluginName, NewHighNodeUtilization, nil, pluginbuilder.PluginRegistry)
+	pluginregistry.Register(HighNodeUtilizationPluginName, NewHighNodeUtilization, &defaultevictor.DefaultEvictor{}, &defaultevictor.DefaultEvictorArgs{}, nil, nil, pluginregistry.PluginRegistry)
 }
 
 const HighNodeUtilizationPluginName = "HighNodeUtilization"
@@ -42,15 +43,15 @@ const HighNodeUtilizationPluginName = "HighNodeUtilization"
 // Note that CPU/Memory requests are used to calculate nodes' utilization and not the actual resource usage.
 
 type HighNodeUtilization struct {
-	handle    framework.Handle
+	handle    types.Handle
 	args      *HighNodeUtilizationArgs
 	podFilter func(pod *v1.Pod) bool
 }
 
-var _ framework.BalancePlugin = &HighNodeUtilization{}
+var _ types.BalancePlugin = &HighNodeUtilization{}
 
 // NewHighNodeUtilization builds plugin from its arguments while passing a handle
-func NewHighNodeUtilization(args runtime.Object, handle framework.Handle) (framework.Plugin, error) {
+func NewHighNodeUtilization(args runtime.Object, handle types.Handle) (types.Plugin, error) {
 
 	podFilter, err := podutil.NewOptions().
 		WithFilter(handle.Evictor().Filter).
@@ -72,7 +73,7 @@ func (h *HighNodeUtilization) Name() string {
 }
 
 // Balance extension point implementation for the plugin
-func (h *HighNodeUtilization) Balance(ctx context.Context, nodes []*v1.Node) *framework.Status {
+func (h *HighNodeUtilization) Balance(ctx context.Context, nodes []*v1.Node) *types.Status {
 
 	return nil
 }
