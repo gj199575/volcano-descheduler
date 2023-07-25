@@ -3,9 +3,9 @@ package main
 import (
 	"os"
 
+	"github.com/gj199575/volcano-descheduler/cmd/app"
 	_ "github.com/gj199575/volcano-descheduler/pkg/plugins/nodeutilization"
 	"k8s.io/component-base/cli"
-	"sigs.k8s.io/descheduler/cmd/descheduler/app"
 )
 
 func main() {

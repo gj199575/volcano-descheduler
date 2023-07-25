@@ -1,0 +1,67 @@
+@startuml
+namespace profile {
+    class evictorImpl << (S,Aquamarine) >> {
+        - podEvictor *evictions.PodEvictor
+        - filter pod.FilterFunc
+        - preEvictionFilter pod.FilterFunc
+
+        + Filter(pod *v1.Pod) bool
+        + PreEvictionFilter(pod *v1.Pod) bool
+        + Evict(ctx context.Context, pod *v1.Pod, opts evictions.EvictOptions) bool
+        + NodeLimitExceeded(node *v1.Node) bool
+
+    }
+    interface filterPlugin  {
+        + Filter(pod *v1.Pod) bool
+
+    }
+    class handleImpl << (S,Aquamarine) >> {
+        - clientSet kubernetes.Interface
+        - getPodsAssignedToNodeFunc pod.GetPodsAssignedToNodeFunc
+        - sharedInformerFactory informers.SharedInformerFactory
+        - evictor *evictorImpl
+
+        + ClientSet() kubernetes.Interface
+        + GetPodsAssignedToNodeFunc() pod.GetPodsAssignedToNodeFunc
+        + SharedInformerFactory() informers.SharedInformerFactory
+        + Evictor() types.Evictor
+
+    }
+    class handleImplOpts << (S,Aquamarine) >> {
+        - clientSet kubernetes.Interface
+        - sharedInformerFactory informers.SharedInformerFactory
+        - getPodsAssignedToNodeFunc pod.GetPodsAssignedToNodeFunc
+        - podEvictor *evictions.PodEvictor
+
+    }
+    interface preEvictionFilterPlugin  {
+        + PreEvictionFilter(pod *v1.Pod) bool
+
+    }
+    class profile.Option << (T, #FF7700) >>  {
+    }
+    class profileImpl << (S,Aquamarine) >> {
+        - profileName string
+        - podEvictor *evictions.PodEvictor
+        - deschedulePlugins []types.DeschedulePlugin
+        - balancePlugins []types.BalancePlugin
+        - filterPlugins []filterPlugin
+        - preEvictionFilterPlugins []preEvictionFilterPlugin
+        - deschedule 
+        - balance 
+        - filter 
+        - preEvictionFilter 
+
+        - registryToExtensionPoints(registry pluginregistry.Registry) 
+
+        + RunDeschedulePlugins(ctx context.Context, nodes []*v1.Node) *types.Status
+        + RunBalancePlugins(ctx context.Context, nodes []*v1.Node) *types.Status
+
+    }
+}
+
+"profile.filterPlugin" <|-- "implements""profile.evictorImpl"
+"profile.preEvictionFilterPlugin" <|-- "implements""profile.evictorImpl"
+
+"profile.<font color=blue>func</font>(*handleImplOpts) " #.. "alias of""profile.Option"
+@enduml
