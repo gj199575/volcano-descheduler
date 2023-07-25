@@ -17,8 +17,9 @@ import (
 	fakeclientset "k8s.io/client-go/kubernetes/fake"
 	core "k8s.io/client-go/testing"
 
+	"github.com/gj199575/volcano-descheduler/pkg/evictions"
 	"sigs.k8s.io/descheduler/pkg/api"
-	"sigs.k8s.io/descheduler/pkg/descheduler/evictions"
+	sigevictions "sigs.k8s.io/descheduler/pkg/descheduler/evictions"
 	podutil "sigs.k8s.io/descheduler/pkg/descheduler/pod"
 	fakeplugin "sigs.k8s.io/descheduler/pkg/framework/fake/plugin"
 	"sigs.k8s.io/descheduler/pkg/framework/pluginregistry"
@@ -185,7 +186,7 @@ func TestProfileDescheduleBalanceExtensionPointsEviction(t *testing.T) {
 			if test.extensionPoint == frameworktypes.DescheduleExtensionPoint {
 				fakePlugin.AddReactor(string(frameworktypes.DescheduleExtensionPoint), func(action fakeplugin.Action) (handled, filter bool, err error) {
 					if dAction, ok := action.(fakeplugin.DescheduleAction); ok {
-						if dAction.Handle().Evictor().Evict(ctx, p1, evictions.EvictOptions{}) {
+						if dAction.Handle().Evictor().Evict(ctx, p1, sigevictions.EvictOptions{}) {
 							return true, false, nil
 						}
 						return true, false, fmt.Errorf("pod not evicted")
@@ -196,7 +197,7 @@ func TestProfileDescheduleBalanceExtensionPointsEviction(t *testing.T) {
 			if test.extensionPoint == frameworktypes.BalanceExtensionPoint {
 				fakePlugin.AddReactor(string(frameworktypes.BalanceExtensionPoint), func(action fakeplugin.Action) (handled, filter bool, err error) {
 					if dAction, ok := action.(fakeplugin.BalanceAction); ok {
-						if dAction.Handle().Evictor().Evict(ctx, p1, evictions.EvictOptions{}) {
+						if dAction.Handle().Evictor().Evict(ctx, p1, sigevictions.EvictOptions{}) {
 							return true, false, nil
 						}
 						return true, false, fmt.Errorf("pod not evicted")

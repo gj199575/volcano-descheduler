@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package nodeutilization
+package loadAware
 
 import (
 	"context"
@@ -22,37 +22,29 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/descheduler/cmd/descheduler/app"
 	"sigs.k8s.io/descheduler/pkg/descheduler"
 	podutil "sigs.k8s.io/descheduler/pkg/descheduler/pod"
 	"sigs.k8s.io/descheduler/pkg/framework/pluginregistry"
-	"sigs.k8s.io/descheduler/pkg/framework/plugins/defaultevictor"
 	"sigs.k8s.io/descheduler/pkg/framework/types"
 )
 
 func init() {
-	app.SetupLogs()
 	descheduler.SetupPlugins()
-	fmt.Println("123")
-	pluginregistry.Register(HighNodeUtilizationPluginName, NewHighNodeUtilization, &defaultevictor.DefaultEvictor{}, &defaultevictor.DefaultEvictorArgs{}, nil, nil, pluginregistry.PluginRegistry)
+	pluginregistry.Register(LoadAwarePluginName, NewLoadAware, &LoadAware{}, &LoadAwareArgs{}, ValidateLoadAwareArgs, SetDefaults_LoadAwareArgs, pluginregistry.PluginRegistry)
 }
 
-const HighNodeUtilizationPluginName = "HighNodeUtilization"
+const LoadAwarePluginName = "LoadAware"
 
-// HighNodeUtilization evicts pods from under utilized nodes so that scheduler can schedule according to its plugin.
-// Note that CPU/Memory requests are used to calculate nodes' utilization and not the actual resource usage.
-
-type HighNodeUtilization struct {
+type LoadAware struct {
 	handle    types.Handle
-	args      *HighNodeUtilizationArgs
+	args      *LoadAwareArgs
 	podFilter func(pod *v1.Pod) bool
 }
 
-var _ types.BalancePlugin = &HighNodeUtilization{}
+var _ types.BalancePlugin = &LoadAware{}
 
-// NewHighNodeUtilization builds plugin from its arguments while passing a handle
-func NewHighNodeUtilization(args runtime.Object, handle types.Handle) (types.Plugin, error) {
-
+// NewLoadAware builds plugin from its arguments while passing a handle
+func NewLoadAware(args runtime.Object, handle types.Handle) (types.Plugin, error) {
 	podFilter, err := podutil.NewOptions().
 		WithFilter(handle.Evictor().Filter).
 		BuildFilterFunc()
@@ -60,7 +52,7 @@ func NewHighNodeUtilization(args runtime.Object, handle types.Handle) (types.Plu
 		return nil, fmt.Errorf("error initializing pod filter function: %v", err)
 	}
 
-	return &HighNodeUtilization{
+	return &LoadAware{
 		handle:    handle,
 		args:      nil,
 		podFilter: podFilter,
@@ -68,12 +60,11 @@ func NewHighNodeUtilization(args runtime.Object, handle types.Handle) (types.Plu
 }
 
 // Name retrieves the plugin name
-func (h *HighNodeUtilization) Name() string {
-	return HighNodeUtilizationPluginName
+func (h *LoadAware) Name() string {
+	return LoadAwarePluginName
 }
 
 // Balance extension point implementation for the plugin
-func (h *HighNodeUtilization) Balance(ctx context.Context, nodes []*v1.Node) *types.Status {
-
+func (h *LoadAware) Balance(ctx context.Context, nodes []*v1.Node) *types.Status {
 	return nil
 }
