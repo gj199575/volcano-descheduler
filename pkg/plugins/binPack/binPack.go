@@ -53,6 +53,11 @@ var _ types.BalancePlugin = &binPack{}
 
 // NewbinPack builds plugin from its arguments while passing a handle
 func NewbinPack(args runtime.Object, handle types.Handle) (types.Plugin, error) {
+	binPackArgsValue, ok := args.(*binPackArgs)
+	if !ok {
+		return nil, fmt.Errorf("want args to be of type HighNodeUtilizationArgs, got %T", args)
+	}
+
 	podFilter, err := podutil.NewOptions().
 		WithFilter(handle.Evictor().Filter).
 		BuildFilterFunc()
@@ -62,7 +67,7 @@ func NewbinPack(args runtime.Object, handle types.Handle) (types.Plugin, error) 
 
 	return &binPack{
 		handle:    handle,
-		args:      nil,
+		args:      binPackArgsValue,
 		podFilter: podFilter,
 	}, nil
 }
