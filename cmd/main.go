@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	_ "github.com/gj199575/volcano-descheduler/pkg/plugins/nodeutilization"
+	_ "github.com/gj199575/volcano-descheduler/pkg/plugins/loadAware"
 	"k8s.io/component-base/cli"
 	"sigs.k8s.io/descheduler/cmd/descheduler/app"
 )
