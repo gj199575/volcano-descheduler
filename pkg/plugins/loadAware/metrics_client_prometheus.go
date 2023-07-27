@@ -46,9 +46,6 @@ type PrometheusMetricsClient struct {
 func NewPrometheusMetricsClient(address string, conf Metrics) (*PrometheusMetricsClient, error) {
 	return &PrometheusMetricsClient{address: address, conf: conf}, nil
 }
-
-var Period string
-
 func (p *PrometheusMetricsClient) NodeMetricsAvg(ctx context.Context, nodeName string, period string) (*NodeMetrics, error) {
 	klog.V(4).Infof("Get node metrics from Prometheus: %s", p.address)
 	var client api.Client
@@ -65,9 +62,6 @@ func (p *PrometheusMetricsClient) NodeMetricsAvg(ctx context.Context, nodeName s
 	}
 	v1api := prometheusv1.NewAPI(client)
 	nodeMetrics := &NodeMetrics{}
-	if Period == "" {
-		return nodeMetrics, nil
-	}
 	cpuQueryStr := fmt.Sprintf("avg_over_time((100 - (avg by (instance) (irate(node_cpu_seconds_total{mode=\"idle\",instance=\"%s\"}[30s])) * 100))[%s:30s])", nodeName, period)
 	memQueryStr := fmt.Sprintf("100*avg_over_time(((1-node_memory_MemAvailable_bytes{instance=\"%s\"}/node_memory_MemTotal_bytes{instance=\"%s\"}))[%s:30s])", nodeName, nodeName, period)
 
