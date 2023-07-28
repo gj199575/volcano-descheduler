@@ -371,6 +371,7 @@ func (h *LoadAware) getNodeUsage(
 			cpuUsageAvg: nodeMetric.CPU,
 			memUsageAvg: nodeMetric.Memory,
 			allPods:     pods,
+			usage:       nodeutil.NodeUtilization(pods, resourceNames),
 		}
 	}
 
